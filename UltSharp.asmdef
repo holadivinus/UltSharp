@@ -1,0 +1,21 @@
+{
+    "name": "UltSharp",
+    "rootNamespace": "UltSharp",
+    "references": [
+        "GUID:57a6d82589ae03c4cabdc058f719f231",
+        "GUID:611601e90e6642c4bb897855afbc8383"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "0Harmony2.dll",
+        "UltSharpCustomReader.dll",
+        "Newtonsoft.Json.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
