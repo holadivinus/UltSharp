@@ -9,7 +9,7 @@ namespace UltSharp
     [ExecuteAlways]
     public class UltSharpScript : MonoBehaviour
     {
-        public string ScriptIdentifier;
+        public string ScriptIdentifier = "ExampleUserBehaviour";
 
         public GameObject LastCompiledRoot;
         public SerializedScript LastScript;

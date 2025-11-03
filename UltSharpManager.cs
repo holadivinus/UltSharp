@@ -10,6 +10,7 @@ using UltEvents;
 using UltSharp.EditorTestingUtilities;
 using UltSharpCustomReader;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 namespace UltSharp
@@ -17,11 +18,42 @@ namespace UltSharp
     [InitializeOnLoad]
     public static class UltSharpManager
     {
+        public static bool InPackage
+        {
+            get
+            {
+                Assembly assembly = typeof(UltSharpManager).Assembly;
+                var p = UnityEditor.PackageManager.PackageInfo.FindForAssembly(assembly);
+                return p != null;
+            }
+        }
         private static string CustomProjFolder => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "UltSharpCustom").Replace("/", "\\");
-        private static string ThisProjFolder => Path.Combine(Application.dataPath, "UltSharp").Replace("/", "\\");
+        private static string _tpf;
+        private static string ThisProjFolder
+        {
+            get
+            {
+                if (!InPackage) return Path.Combine(Application.dataPath, "UltSharp").Replace("/", "\\");
+                else if (_tpf != null) return _tpf;
+                else
+                {
+                    string cacheFolder = Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Library", "PackageCache");
+                    foreach (var dir in Directory.EnumerateDirectories(cacheFolder))
+                    {
+                        if (dir.Contains("com.holadivinus.ultsharp"))
+                        {
+                            _tpf = dir + "\\";
+                            _tpf = _tpf.Replace("/", "\\");
+                            return _tpf;
+                        }
+                    }
+                    throw new Exception("Couldn't find package folder!");
+                }
+            }
+        }
         private static string CustomAssemblyFolder => Path.Combine(CustomProjFolder, "bin", "x64", "Debug").Replace("/", "\\");
         private static string CustomAssemblyPath => Path.Combine(CustomAssemblyFolder, "UltSharpCustom.dll").Replace("/", "\\");
-        private static string ReaderAssemblyPath => Path.Combine(ThisProjFolder, "UltSharpCustomReader.dll").Replace("/","\\");
+        private static string ReaderAssemblyPath => Path.Combine(ThisProjFolder, "UltSharpCustomReader.dll").Replace("/", "\\");
         private static string HarmonyAssemblyPath => Path.Combine(ThisProjFolder, "0Harmony2.dll").Replace("/", "\\");
         private static string CustomProjZip => Path.Combine(ThisProjFolder, "UltSharpCustom.zip").Replace("/", "\\");
         private static string ScriptAssembliesPath => Path.Combine(Directory.GetParent(Application.dataPath).FullName, "Library", "ScriptAssemblies");
@@ -30,14 +62,18 @@ namespace UltSharp
         // on Unity Load
         static UltSharpManager()
         {
-            if (!Directory.Exists(CustomProjFolder)) 
+            // Soft Dependancies
+            Client.AddAndRemove(new string[] { "https://github.com/holadivinus/BLXRComp.git", "https://github.com/holadivinus/MarrowBuildHook.git" }, null);
+
+
+            if (!Directory.Exists(CustomProjFolder))
                 return;
 
             // build hook.
             Type buildHookType = Type.GetType("MarrowBuildHook.MarrowBuildHook, MarrowBuildHook");
             if (buildHookType != null)
             {
-                Debug.Log("can hookk"); 
+                Debug.Log("can hookk");
                 var softCallbacks = (List<Action<IEnumerable<GameObject>>>)buildHookType.GetField("ExternalGameObjectProcesses").GetValue(null);
                 softCallbacks.Add((numer) =>
                 {
@@ -95,7 +131,7 @@ namespace UltSharp
                     }
                 });
             }
-            
+
             init();
         }
         private static Dictionary<Type, List<FieldInfo>> TypeToUltFields = new();
@@ -142,7 +178,7 @@ namespace UltSharp
         private static void OnCreated(object sender, FileSystemEventArgs e) => mainThread.Enqueue(HandleAssembly);
 
 
-        
+
         private static AppDomain LoadedDomain;
         private static void HandleAssembly() // handles the fetching of user-code from the hotswapped dll
         {
@@ -150,7 +186,7 @@ namespace UltSharp
             {
                 AppDomain.Unload(LoadedDomain);
                 LoadedDomain = null;
-                ILScripts.Clear(); 
+                ILScripts.Clear();
             }
 
             if (!File.Exists(CustomAssemblyPath))
@@ -162,7 +198,7 @@ namespace UltSharp
                 LoadedDomain = AppDomain.CreateDomain("UserUltAssemblies", null, new AppDomainSetup() { ApplicationBase = CustomAssemblyFolder, ShadowCopyFiles = "true" });
                 LoadedDomain.Load(new AssemblyName() { CodeBase = HarmonyAssemblyPath }); // add harmony
                 LoadedDomain.Load(new AssemblyName() { CodeBase = ReaderAssemblyPath });  // add user code reader
-                
+
                 var userCodeReader = (UltSharpReflector)LoadedDomain.CreateInstanceAndUnwrap("UltSharpCustomReader, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null", typeof(UltSharpReflector).FullName);
 
                 // make the "user code reader" send us their compiled code
@@ -170,10 +206,10 @@ namespace UltSharp
                 ILScripts = userCodeReader.SerializeScripts(CustomAssemblyPath).ToDictionary(s => s.Name);
 
                 foreach (var item in ILScripts)
-                    Debug.Log("Parsed UltScript: " + item.Key); 
+                    Debug.Log("Parsed UltScript: " + item.Key);
 
                 ScriptsReloaded.Invoke();
-                 
+
                 foreach (var script in Resources.FindObjectsOfTypeAll<UltSharpScript>())
                 {
                     if (!script) continue;
@@ -184,7 +220,7 @@ namespace UltSharp
                         if (script.LastScript == null) Debug.LogError("Failed to load UltScript: " + script.ScriptIdentifier);
                         Debug.Log($"Compiled UltScript \"{script.LastScript.Name}\" on GameObject \"{script.gameObject.GetPath()}\"");
                     }
-                    catch (Exception ex) 
+                    catch (Exception ex)
                     {
                         Debug.LogError($"Failed to Compile UltScript \"{script.LastScript?.Name}\"! Error:");
                         Debug.LogException(ex);
@@ -193,18 +229,18 @@ namespace UltSharp
                 foreach (var insp in Resources.FindObjectsOfTypeAll<UltSharpScriptInspector>())
                     insp.GenerateUI();
             }
-            catch (BadImageFormatException ex) 
-            { 
+            catch (BadImageFormatException ex)
+            {
                 Debug.LogException(ex);
                 Debug.Log(ex.FusionLog);
             }
         }
-        
+
 
         //                   script name  script
         public static Dictionary<string, SerializedScript> ILScripts = new();
         public static Action ScriptsReloaded = delegate { };
-         
+
 
         [MenuItem("UltSharp/Open Project Folder")]
         private static void OpenProjFolder()

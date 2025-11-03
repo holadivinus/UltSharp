@@ -25,7 +25,8 @@ namespace UltSharp
             ScriptComponent = (UltSharpScript)this.target;
 
             if (!m_InspectorUXML)
-                m_InspectorUXML = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>("Assets/UltSharp/UI/UltSharpScriptInspectorUI.uxml");
+                m_InspectorUXML = AssetDatabase.LoadAssetAtPath<VisualTreeAsset>(UltSharpManager.InPackage ? "Packages/UltSharp/UI/UltSharpScriptInspectorUI.uxml"
+                    : "Assets/UltSharp/UI/UltSharpScriptInspectorUI.uxml");
             VisualElement myInspector = m_InspectorUXML.Instantiate();
 
             root = new VisualElement();
@@ -56,7 +57,7 @@ namespace UltSharp
 
             ScriptSelection = new DropdownField() { label = "UltScript:" };
             ScriptSelection.choices = UltSharpManager.ILScripts.Keys?.ToList();
-            ScriptSelection.value = ScriptComponent.ScriptIdentifier; 
+            ScriptSelection.value = ScriptComponent.ScriptIdentifier;
             //ScriptSelection.style.color = Color.blue;
             topHorizontal.Add(ScriptSelection);
             ScriptSelection.bindingPath = "ScriptIdentifier";
@@ -89,15 +90,15 @@ namespace UltSharp
                 UltEventHandle method = ScriptComponent.LastMethodActions[i];
 
                 Button b = null;
-                
+
 
                 root2.Add(b = new Button(() =>
                 {
                     IfBlockRunner.Active = true;
 
-                    System.Diagnostics.Stopwatch stopWatch = new(); 
+                    System.Diagnostics.Stopwatch stopWatch = new();
                     stopWatch.Start();
-                    method.Event.DynamicInvoke(); 
+                    method.Event.DynamicInvoke();
                     stopWatch.Stop();
                     IfBlockRunner.Active = false;
 
@@ -129,7 +130,7 @@ namespace UltSharp
 
                     VisualElement v;
                     PropsRoot.Add(
-                        v=GetFieldForType(field, field.Name, store.Comp, store.PropName, userOverride != null ? userOverride.Value.Value : field.DefaultValue)
+                        v = GetFieldForType(field, field.Name, store.Comp, store.PropName, userOverride != null ? userOverride.Value.Value : field.DefaultValue)
                     );
                     if (v is BindableElement b)
                     {
@@ -165,7 +166,7 @@ namespace UltSharp
             }
 
             if (fieldType == typeof(string))
-            { 
+            {
                 var o = new TextField(fieldName, 999999, true, false, 'a');
                 o.bindingPath = binding;
                 o.BindProperty(new SerializedObject(storager).FindProperty("m_Text"));
@@ -256,10 +257,10 @@ namespace UltSharp
                 o.RegisterValueChangedCallback((e) => { if (e.previousValue != e.newValue) makeOverride(e.newValue); });
                 return o;
             }
-            
+
             return new TextElement() { text = "Error: No UI for variable of type: " + fieldType.Name };
         }
-        
+
     }
 }
 #endif
