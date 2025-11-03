@@ -177,7 +177,7 @@ namespace UltSharp
             {
                 var o = new IntegerField(fieldName);
                 o.bindingPath = binding;
-                o.BindProperty(new SerializedObject(storager).FindProperty("m_RendererPriority"));
+                o.BindProperty(new SerializedObject(storager).FindProperty("m_CullingMask"));
                 o.value = (int)@default;
                 o.RegisterValueChangedCallback((e) => { if (e.previousValue != e.newValue) makeOverride(e.newValue); });
                 return o;

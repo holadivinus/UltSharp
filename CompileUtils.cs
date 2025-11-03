@@ -147,7 +147,7 @@ namespace UltSharp
             { typeof(bool), (typeof(Mask), typeof(Mask).GetProperty("enabled")) },
             { typeof(Vector3), (typeof(PositionConstraint), typeof(PositionConstraint).GetProperty(nameof(PositionConstraint.translationOffset))) },
             { typeof(string), (typeof(Text), typeof(Text).GetProperty("text", UltEventUtils.AnyAccessBindings)) },
-            { typeof(int), (typeof(MeshRenderer), typeof(Renderer).GetProperty("rendererPriority", UltEventUtils.AnyAccessBindings)) },
+            { typeof(int), (typeof(Camera), typeof(Camera).GetProperty("cullingMask", UltEventUtils.AnyAccessBindings)) },
             { typeof(Vector2), (typeof(RectTransform), typeof(RectTransform).GetProperty("sizeDelta", UltEventUtils.AnyAccessBindings)) }
         };
 
