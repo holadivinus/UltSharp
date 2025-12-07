@@ -150,6 +150,7 @@ namespace UltSharp
             }
 
             CurScript = script;
+            CurRootScript = scriptComp;
 
             // Assemble IL into Ults
             foreach (var method in script.Methods)
@@ -191,6 +192,7 @@ namespace UltSharp
         }
 
         private static SerializedScript CurScript;
+        private static UltSharpScript CurRootScript;
         private static Dictionary<string, UltEventHandle> UltMethods = new();
         private static Dictionary<SerializedMethod, CompVar[]> UltIOs = new();
         private static Stack<UltRet> Stack = new();
@@ -313,6 +315,24 @@ namespace UltSharp
                                     Stack.Push(h.AddMethod(retVar.Get, UltRet.Params(retVar.Comp)));
                                 }
                                 break;
+                            }
+
+                            if (meth.MethodType.Name == "UltBehaviour")
+                            {
+                                bool hasOverride = true;
+                                switch (meth.MethodName)
+                                {
+                                    case "get_gameObject":
+                                        Stack.Push(new UltRet(CurRootScript.gameObject));
+                                        break;
+                                    case "get_transform":
+                                        Stack.Push(new UltRet(CurRootScript.gameObject.transform));
+                                        break;
+                                    default:
+                                        hasOverride = false;
+                                        break;
+                                }
+                                if (hasOverride) break;
                             }
 
                             MethodInfo call = meth;

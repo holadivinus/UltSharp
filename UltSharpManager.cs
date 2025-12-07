@@ -142,6 +142,9 @@ namespace UltSharp
             if (hasInit) return;
             hasInit = true;
 
+            // update the user's UltBehaviour.cs, if it exists
+            EnsureLatestUltBehaviorDef();
+
             // load up existing user compiled code
             HandleAssembly();
 
@@ -271,10 +274,19 @@ namespace UltSharp
                 init();
             }
 
-
+            EnsureLatestUltBehaviorDef();
             System.Diagnostics.Process.Start("explorer.exe", "/select," + Path.Combine(CustomProjFolder, "UltSharpCustom.sln"));
-
         }
+
+        // since we might often change UltBehaviour.cs, we gotta make sure it updates
+        private static void EnsureLatestUltBehaviorDef()
+        {
+            string p = Path.Combine(CustomProjFolder, "UltBehaviour.cs");
+            if (File.Exists(p)) 
+                File.WriteAllText(p, UltBehaviourPaste);
+        }
+
+        private const string UltBehaviourPaste = "using UnityEngine;\r\n\r\nnamespace UltSharpCustom\r\n{\r\n    public class UltBehaviour\r\n    {\r\n        public GameObject gameObject { get; }\r\n        public Transform transform { get; }\r\n        public virtual void OnAwake() { }\r\n        public virtual void OnStart() { }\r\n        public virtual void OnEnable() { }\r\n        public virtual void OnDisable() { }\r\n        public virtual void OnDestroy() { }\r\n\r\n        public virtual void Update() { }\r\n        public virtual void LateUpdate() { }\r\n        public virtual void FixedUpdate() { }\r\n    }\r\n}";
     }
 }
 
