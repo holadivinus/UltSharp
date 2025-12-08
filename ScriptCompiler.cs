@@ -323,9 +323,11 @@ namespace UltSharp
                                 switch (meth.MethodName)
                                 {
                                     case "get_gameObject":
+                                        Stack.Pop();
                                         Stack.Push(new UltRet(CurRootScript.gameObject));
                                         break;
                                     case "get_transform":
+                                        Stack.Pop();
                                         Stack.Push(new UltRet(CurRootScript.gameObject.transform));
                                         break;
                                     default:
